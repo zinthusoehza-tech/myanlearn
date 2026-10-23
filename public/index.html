@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Myan Learn</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Padauk:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #8A6DF1;
+  --primary-light: #B09AF4;
+  --bg-color: #EBE9FC;
+  --card-bg: #FFFFFF;
+  --text-dark: #2D2D2D;
+  --text-light: #7A7A7A;
+  --shadow: 0 8px 24px rgba(138, 109, 241, 0.15);
+  --radius: 24px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Padauk', sans-serif; }
+body { background-color: var(--bg-color); color: var(--text-dark); overflow-x: hidden; height: 100vh; display: flex; flex-direction: column; }
+
+/* --- SPLASH & AUTH --- */
+#authScreen { position: fixed; inset: 0; background: linear-gradient(135deg, #EBE9FC 0%, #D3C9F9 100%); z-index: 1000; display: flex; flex-direction: column; padding: 2rem; justify-content: center; align-items: center; }
+.auth-box { background: var(--card-bg); padding: 2rem; border-radius: var(--radius); box-shadow: var(--shadow); width: 100%; max-width: 400px; text-align: center; }
+.auth-logo { font-size: 2rem; font-weight: 800; color: var(--primary); margin-bottom: 1.5rem; letter-spacing: -1px; }
+.auth-box input { width: 100%; padding: 1rem; border: 2px solid #EAEAEA; border-radius: 16px; margin-bottom: 1rem; font-size: 1rem; outline: none; transition: 0.2s; }
+.auth-box input:focus { border-color: var(--primary); }
+.btn { width: 100%; padding: 1rem; border-radius: 16px; border: none; background: var(--primary); color: white; font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
+.btn:active { transform: scale(0.98); }
+.btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
+.auth-switch { margin-top: 1rem; font-size: 0.9rem; color: var(--text-light); }
+.auth-switch span { color: var(--primary); font-weight: 600; cursor: pointer; }
+.hold-progress { position: absolute; bottom: 0; left: 0; height: 4px; background: rgba(255,255,255,0.5); width: 0%; transition: width 0.1s linear; }
+
+/* --- MAIN APP --- */
+#app { display: none; flex-direction: column; height: 100vh; padding-bottom: 80px; }
+.header { padding: 1.5rem 1.5rem 0.5rem; display: flex; justify-content: space-between; align-items: center; }
+.header h2 { font-size: 1.5rem; font-weight: 700; }
+.coin-badge { background: #FFF4D2; color: #D4A017; padding: 0.4rem 0.8rem; border-radius: 20px; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 0.3rem; }
+
+/* Hero Banner */
+.hero { margin: 1rem 1.5rem; border-radius: var(--radius); overflow: hidden; position: relative; height: 180px; box-shadow: var(--shadow); background: #ccc; }
+.hero img { width: 100%; height: 100%; object-fit: cover; }
+.hero-text { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%); display: flex; flex-direction: column; justify-content: flex-end; padding: 1.2rem; color: white; }
+.hero-text h1 { font-size: 1.4rem; margin-bottom: 0.2rem; }
+.hero-text p { font-size: 0.85rem; opacity: 0.9; }
+
+/* Subjects */
+.section-title { padding: 1rem 1.5rem 0.5rem; font-weight: 700; font-size: 1.1rem; display: flex; justify-content: space-between; }
+.subjects-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; padding: 0 1.5rem; }
+.subject-card { background: var(--card-bg); border-radius: var(--radius); padding: 1rem; box-shadow: var(--shadow); display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; transition: 0.2s; }
+.subject-card:active { transform: scale(0.96); }
+.subject-img { width: 100%; height: 90px; border-radius: 16px; object-fit: cover; margin-bottom: 0.8rem; background: var(--bg-color); }
+.subject-card h3 { font-size: 1rem; font-weight: 600; }
+
+/* Bottom Nav */
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 1rem 0; border-radius: 30px 30px 0 0; box-shadow: 0 -4px 20px rgba(0,0,0,0.05); z-index: 100; }
+.nav-item { color: var(--text-light); font-size: 0.8rem; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; cursor: pointer; transition: 0.2s; }
+.nav-item.active { color: var(--primary); font-weight: 600; }
+.nav-icon { font-size: 1.4rem; }
+
+/* Modals */
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 2000; display: none; justify-content: center; align-items: flex-end; }
+.modal.open { display: flex; }
+.modal-content { background: white; width: 100%; max-height: 90vh; border-radius: 30px 30px 0 0; padding: 2rem 1.5rem; overflow-y: auto; animation: slideUp 0.3s ease; }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+.close-btn { background: #F0F0F0; border: none; width: 32px; height: 32px; border-radius: 50%; font-weight: bold; cursor: pointer; }
+
+/* Lessons List */
+.lesson-item { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #F8F8FC; border-radius: 16px; margin-bottom: 0.8rem; border: 1px solid #EFEFEF; }
+.lesson-info h4 { font-size: 1rem; margin-bottom: 0.2rem; }
+.lesson-info p { font-size: 0.8rem; color: var(--text-light); }
+.lesson-btn { background: var(--primary); color: white; border: none; padding: 0.6rem 1rem; border-radius: 12px; font-weight: 600; cursor: pointer; }
+.lesson-btn.locked { background: #E0E0E0; color: #888; }
+.lesson-btn.unlocked { background: #4CAF50; }
+
+/* Admin Forms */
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--text-dark); }
+.form-group input, .form-group select { width: 100%; padding: 0.8rem; border: 2px solid #EAEAEA; border-radius: 12px; font-size: 0.95rem; }
+</style>
+</head>
+<body>
+
+<!-- AUTHENTICATION SCREEN -->
+<div id="authScreen">
+  <div class="auth-box">
+    <div class="auth-logo">Myan Learn</div>
+    
+    <!-- Login Form -->
+    <div id="loginForm">
+      <input type="tel" id="loginPhone" placeholder="Phone Number (e.g. 09123456789)">
+      <input type="password" id="loginPassword" placeholder="Password">
+      <button class="btn" id="loginBtn">
+        <span>Login</span>
+        <div class="hold-progress" id="loginProgress"></div>
+      </button>
+      <div class="auth-switch">Don't have an account? <span onclick="toggleAuth('register')">Register</span></div>
+    </div>
+
+    <!-- Register Form -->
+    <div id="registerForm" style="display:none;">
+      <input type="text" id="regName" placeholder="Full Name">
+      <input type="tel" id="regPhone" placeholder="Phone Number">
+      <input type="password" id="regPassword" placeholder="Password">
+      <button class="btn" onclick="handleRegister()">Register</button>
+      <div class="auth-switch">Already have an account? <span onclick="toggleAuth('login')">Login</span></div>
+    </div>
+    
+    <!-- Admin Form (Hidden by default) -->
+    <div id="adminForm" style="display:none; margin-top: 1rem; border-top: 1px solid #eee; padding-top: 1rem;">
+      <input type="password" id="adminPassword" placeholder="Admin Password">
+      <button class="btn" style="background: #2D2D2D;" onclick="handleAdminLogin()">Access Admin Panel</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="header">
+    <h2 id="userGreeting">Hello 👋</h2>
+    <div class="coin-badge">🪙 <span id="coinBalance">0</span></div>
+  </div>
+
+  <!-- Hero Banner -->
+  <div class="hero">
+    <img id="heroImage" src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1000&auto=format&fit=crop" alt="Hero">
+    <div class="hero-text">
+      <h1 id="heroTitle">Welcome to Myan Learn</h1>
+      <p id="heroSubtitle">Start your learning journey today!</p>
+    </div>
+  </div>
+
+  <!-- Subjects -->
+  <div class="section-title">Subjects</div>
+  <div class="subjects-grid" id="subjectsGrid">
+    <!-- Subjects will be injected here by JS -->
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <div class="nav-item active" onclick="switchTab('home', this)">
+      <div class="nav-icon">🏠</div> Home
+    </div>
+    <div class="nav-item" onclick="switchTab('profile', this)">
+      <div class="nav-icon">👤</div> Profile
+    </div>
+    <div class="nav-item" id="adminNavBtn" style="display:none;" onclick="switchTab('admin', this)">
+      <div class="nav-icon">⚙️</div> Admin
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<!-- Subject Lessons Modal -->
+<div class="modal" id="lessonsModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modalSubjectTitle">Lessons</h2>
+      <button class="close-btn" onclick="closeModal('lessonsModal')">✕</button>
+    </div>
+    <div id="lessonsList"></div>
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div class="modal" id="profileModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Edit Profile</h2>
+      <button class="close-btn" onclick="closeModal('profileModal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label>Name</label>
+      <input type="text" id="editName">
+    </div>
+    <div class="form-group">
+      <label>Profile Image</label>
+      <input type="file" id="editProfileImg" accept="image/*">
+    </div>
+    <button class="btn" onclick="saveProfile()">Save Changes</button>
+  </div>
+</div>
+
+<!-- Admin Modal -->
+<div class="modal" id="adminModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Admin Panel</h2>
+      <button class="close-btn" onclick="closeModal('adminModal')">✕</button>
+    </div>
+    
+    <h3 style="margin-bottom: 1rem;">Update Hero Banner</h3>
+    <div class="form-group">
+      <label>Hero Image URL</label>
+      <input type="text" id="adminHeroImg">
+    </div>
+    <div class="form-group">
+      <label>Title</label>
+      <input type="text" id="adminHeroTitle">
+    </div>
+    <div class="form-group">
+      <label>Subtitle</label>
+      <input type="text" id="adminHeroSub">
+    </div>
+    <button class="btn" onclick="saveHeroSettings()">Update Banner</button>
+    
+    <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid #eee;">
+    
+    <h3 style="margin-bottom: 1rem;">Add New Subject</h3>
+    <div class="form-group">
+      <label>Subject Name</label>
+      <input type="text" id="adminSubName">
+    </div>
+    <div class="form-group">
+      <label>Subject Cover Image URL</label>
+      <input type="text" id="adminSubImg">
+    </div>
+    <button class="btn" onclick="addSubject()">Add Subject</button>
+
+    <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid #eee;">
+
+    <h3 style="margin-bottom: 1rem;">Add Lesson to Subject</h3>
+    <div class="form-group">
+      <label>Select Subject</label>
+      <select id="adminLessonSubject"></select>
+    </div>
+    <div class="form-group">
+      <label>Level (e.g. 1, 2, 3)</label>
+      <input type="number" id="adminLessonLevel">
+    </div>
+    <div class="form-group">
+      <label>Lesson Title</label>
+      <input type="text" id="adminLessonTitle">
+    </div>
+    <div class="form-group">
+      <label>Google Drive PDF Link</label>
+      <input type="text" id="adminLessonUrl">
+    </div>
+    <div class="form-group">
+      <label>Coin Cost</label>
+      <input type="number" id="adminLessonCost">
+    </div>
+    <button class="btn" onclick="addLesson()">Add Lesson</button>
+  </div>
+</div>
+
+<script>
+// --- CONFIG ---
+const API_URL = window.location.origin.includes('localhost') ? 'http://localhost:3000/api' : '/api'; 
+// Vercel မှာ Deploy လုပ်ရင် API_URL ကို '/api' လို့ထားလိုက်ရင် အဆင်ပြေပါတယ်။
+const IMGBB_API_KEY = '7ff81c37659b492882c0ebea8f589d0c';
+
+// --- STATE ---
+let State = {
+  user: null, token: null, settings: {}, subjects: [], lessons: [],
+  activeSubject: null, isAdmin: false
+};
+
+// --- INIT ---
+document.addEventListener('DOMContentLoaded', () => {
+  const savedToken = localStorage.getItem('ml_token');
+  const savedPhone = localStorage.getItem('ml_phone');
+  if (savedToken && savedPhone) {
+    fetchBootstrap(savedPhone);
+  }
+});
+
+// --- API HELPER ---
+async function apiCall(action, payload = {}) {
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, ...payload })
+    });
+    return await res.json();
+  } catch (err) {
+    alert('Network Error: ' + err.message);
+    return { success: false };
+  }
+}
+
+// --- AUTHENTICATION ---
+let holdTimer, holdStart, holdProgressInterval;
+const loginBtn = document.getElementById('loginBtn');
+const loginProgress = document.getElementById('loginProgress');
+let isAdminMode = false;
+
+// 10-Second Hold Logic for Admin
+loginBtn.addEventListener('mousedown', startHold);
+loginBtn.addEventListener('touchstart', startHold);
+loginBtn.addEventListener('mouseup', cancelHold);
+loginBtn.addEventListener('mouseleave', cancelHold);
+loginBtn.addEventListener('touchend', cancelHold);
+
+function startHold(e) {
+  if (isAdminMode) return handleLogin(); // Normal click
+  
+  holdStart = Date.now();
+  loginProgress.style.width = '0%';
+  
+  holdProgressInterval = setInterval(() => {
+    let elapsed = Date.now() - holdStart;
+    let pct = (elapsed / 10000) * 100;
+    loginProgress.style.width = pct + '%';
+    
+    if (elapsed >= 10000) {
+      clearInterval(holdProgressInterval);
+      loginProgress.style.width = '0%';
+      isAdminMode = true;
+      document.getElementById('adminForm').style.display = 'block';
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('registerForm').style.display = 'none';
+    }
+  }, 50);
+}
+
+function cancelHold() {
+  clearInterval(holdProgressInterval);
+  loginProgress.style.width = '0%';
+  // If it was a short click (not 10s hold), do normal login
+  if (Date.now() - holdStart < 500 && !isAdminMode) {
+    handleLogin();
+  }
+}
+
+async function handleLogin() {
+  const phone = document.getElementById('loginPhone').value;
+  const password = document.getElementById('loginPassword').value;
+  if (!phone || !password) return alert('Fill all fields');
+
+  const res = await apiCall('login', { phone, password });
+  if (res.success) {
+    localStorage.setItem('ml_token', res.token);
+    localStorage.setItem('ml_phone', phone);
+    fetchBootstrap(phone);
+  } else {
+    alert(res.error);
+  }
+}
+
+async function handleAdminLogin() {
+  const password = document.getElementById('adminPassword').value;
+  const res = await apiCall('adminLogin', { password });
+  if (res.success) {
+    State.isAdmin = true;
+    State.user = res.user;
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('adminNavBtn').style.display = 'flex';
+    loadAdminData();
+  } else {
+    alert(res.error);
+  }
+}
+
+async function handleRegister() {
+  const name = document.getElementById('regName').value;
+  const phone = document.getElementById('regPhone').value;
+  const password = document.getElementById('regPassword').value;
+  if (!name || !phone || !password) return alert('Fill all fields');
+
+  const res = await apiCall('register', { name, phone, password });
+  if (res.success) {
+    localStorage.setItem('ml_token', res.token);
+    localStorage.setItem('ml_phone', phone);
+    fetchBootstrap(phone);
+  } else {
+    alert(res.error);
+  }
+}
+
+function toggleAuth(type) {
+  document.getElementById('loginForm').style.display = type === 'login' ? 'block' : 'none';
+  document.getElementById('registerForm').style.display = type === 'register' ? 'block' : 'none';
+}
+
+// --- BOOTSTRAP (Load Data) ---
+async function fetchBootstrap(phone) {
+  const res = await apiCall('bootstrap', { phone });
+  if (res.success) {
+    State.user = res.user;
+    State.settings = res.settings || {};
+    State.subjects = res.subjects || [];
+    State.lessons = res.lessons || [];
+    
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    
+    renderApp();
+  }
+}
+
+function renderApp() {
+  if (State.user) {
+    document.getElementById('userGreeting').textContent = `Hello, ${State.user.name} 👋`;
+    document.getElementById('coinBalance').textContent = State.user.coins || 0;
+  }
+  
+  // Load Settings
+  if (State.settings.heroImg) document.getElementById('heroImage').src = State.settings.heroImg;
+  if (State.settings.heroTitle) document.getElementById('heroTitle').textContent = State.settings.heroTitle;
+  if (State.settings.heroSub) document.getElementById('heroSubtitle').textContent = State.settings.heroSub;
+
+  // Render Subjects
+  const grid = document.getElementById('subjectsGrid');
+  grid.innerHTML = '';
+  State.subjects.forEach(sub => {
+    const div = document.createElement('div');
+    div.className = 'subject-card';
+    div.onclick = () => openLessons(sub.id, sub.name);
+    div.innerHTML = `
+      <img class="subject-img" src="${sub.image || 'https://via.placeholder.com/150'}" alt="${sub.name}">
+      <h3>${sub.name}</h3>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+// --- SUBJECTS & LESSONS ---
+function openLessons(subjectId, subjectName) {
+  State.activeSubject = subjectId;
+  document.getElementById('modalSubjectTitle').textContent = subjectName;
+  const list = document.getElementById('lessonsList');
+  list.innerHTML = '';
+  
+  const subjectLessons = State.lessons.filter(l => l.subjectId === subjectId).sort((a,b) => a.level - b.level);
+  
+  if (subjectLessons.length === 0) {
+    list.innerHTML = '<p style="text-align:center; color:#888;">No lessons added yet.</p>';
+  }
+
+  subjectLessons.forEach(lesson => {
+    const isUnlocked = State.user.unlockedLessons?.includes(lesson.id);
+    const isFree = lesson.cost === 0 || !lesson.cost;
+    
+    const div = document.createElement('div');
+    div.className = 'lesson-item';
+    div.innerHTML = `
+      <div class="lesson-info">
+        <h4>Level ${lesson.level}: ${lesson.title}</h4>
+        <p>${isFree ? 'Free' : 'Cost: ' + lesson.cost + ' coins'}</p>
+      </div>
+      <button class="lesson-btn ${isUnlocked || isFree ? 'unlocked' : 'locked'}" 
+        onclick="handleLessonClick('${lesson.id}', '${lesson.url}', ${lesson.cost || 0}, ${isUnlocked || isFree})">
+        ${isUnlocked || isFree ? 'Read' : 'Unlock 🪙'}
+      </button>
+    `;
+    list.appendChild(div);
+  });
+  
+  document.getElementById('lessonsModal').classList.add('open');
+}
+
+async function handleLessonClick(lessonId, url, cost, isUnlocked) {
+  if (isUnlocked) {
+    window.open(url, '_blank');
+    return;
+  }
+
+  if (!confirm(`Unlock this lesson for ${cost} coins?`)) return;
+
+  const res = await apiCall('unlockLesson', { phone: State.user.phone, lessonId, cost });
+  if (res.success) {
+    State.user = res.user;
+    document.getElementById('coinBalance').textContent = State.user.coins;
+    openLessons(State.activeSubject, document.getElementById('modalSubjectTitle').textContent);
+    window.open(url, '_blank');
+  } else {
+    alert(res.error);
+  }
+}
+
+// --- NAVIGATION ---
+function switchTab(tab, el) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+
+  if (tab === 'profile') {
+    document.getElementById('editName').value = State.user.name;
+    document.getElementById('profileModal').classList.add('open');
+  } else if (tab === 'admin') {
+    if (!State.isAdmin) return alert('Only Admin can access');
+    loadAdminData();
+    document.getElementById('adminModal').classList.add('open');
+  }
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// --- PROFILE UPDATE ---
+async function saveProfile() {
+  const name = document.getElementById('editName').value;
+  const imgFile = document.getElementById('editProfileImg').files[0];
+  let profileImg = State.user.profileImg;
+
+  if (imgFile) {
+    try {
+      const formData = new FormData();
+      formData.append('image', imgFile);
+      const imgRes = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
+      const imgData = await imgRes.json();
+      if (imgData.success) profileImg = imgData.data.url;
+    } catch (e) { alert('Image upload failed'); return; }
+  }
+
+  const res = await apiCall('updateProfile', { phone: State.user.phone, name, profileImg });
+  if (res.success) {
+    State.user = res.user;
+    renderApp();
+    closeModal('profileModal');
+    alert('Profile updated!');
+  }
+}
+
+// --- ADMIN ACTIONS ---
+async function loadAdminData() {
+  const res = await apiCall('bootstrap', { phone: null });
+  if (res.success) {
+    State.subjects = res.subjects;
+    const select = document.getElementById('adminLessonSubject');
+    select.innerHTML = '';
+    State.subjects.forEach(sub => {
+      select.innerHTML += `<option value="${sub.id}">${sub.name}</option>`;
+    });
+  }
+}
+
+async function saveHeroSettings() {
+  const settings = {
+    heroImg: document.getElementById('adminHeroImg').value,
+    heroTitle: document.getElementById('adminHeroTitle').value,
+    heroSub: document.getElementById('adminHeroSub').value
+  };
+  const res = await apiCall('admin_saveSettings', { settings });
+  if (res.success) { alert('Banner updated!'); fetchBootstrap(State.user?.phone || null); }
+}
+
+async function addSubject() {
+  const name = document.getElementById('adminSubName').value;
+  const image = document.getElementById('adminSubImg').value;
+  if (!name) return alert('Enter subject name');
+  const res = await apiCall('admin_addSubject', { subject: { name, image } });
+  if (res.success) { alert('Subject added!'); loadAdminData(); fetchBootstrap(State.user?.phone || null); }
+}
+
+async function addLesson() {
+  const subjectId = document.getElementById('adminLessonSubject').value;
+  const level = document.getElementById('adminLessonLevel').value;
+  const title = document.getElementById('adminLessonTitle').value;
+  const url = document.getElementById('adminLessonUrl').value;
+  const cost = document.getElementById('adminLessonCost').value;
+
+  if (!title || !url) return alert('Fill all fields');
+
+  const res = await apiCall('admin_addLesson', { lesson: { subjectId, level, title, url, cost: Number(cost) || 0 } });
+  if (res.success) { alert('Lesson added!'); fetchBootstrap(State.user?.phone || null); }
+}
+</script>
+</body>
+</html>
